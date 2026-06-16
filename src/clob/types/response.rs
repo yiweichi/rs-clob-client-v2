@@ -281,21 +281,21 @@ pub struct SimplifiedMarketResponse {
 }
 
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize, Builder, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Builder, PartialEq, Serialize)]
 pub struct ApiKeysResponse {
     #[serde(rename = "apiKeys")]
     keys: Option<Vec<ApiKey>>,
 }
 
 #[non_exhaustive]
-#[derive(Debug, Clone, Deserialize, Builder, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Builder, PartialEq, Serialize)]
 pub struct BanStatusResponse {
     pub closed_only: bool,
 }
 
 #[non_exhaustive]
 #[serde_as]
-#[derive(Debug, Clone, Deserialize, Builder, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Builder, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[builder(on(String, into))]
 pub struct PostOrderResponse {
@@ -362,7 +362,7 @@ pub struct OpenOrderResponse {
 
 #[non_exhaustive]
 #[serde_as]
-#[derive(Debug, Default, Deserialize, Builder, PartialEq)]
+#[derive(Debug, Default, Deserialize, Builder, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CancelOrdersResponse {
     #[builder(default)]

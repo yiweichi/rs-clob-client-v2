@@ -3,6 +3,8 @@
 pub mod auth;
 #[cfg(feature = "bridge")]
 pub mod bridge;
+#[cfg(feature = "c-api")]
+pub mod c_api;
 #[cfg(feature = "clob")]
 pub mod clob;
 #[cfg(feature = "ctf")]

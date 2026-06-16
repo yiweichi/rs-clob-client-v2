@@ -22,8 +22,13 @@ rust-version = "1.88.0" # MSRV
 [package.metadata.docs.rs]
 all-features = true
 
+[lib]
+name = "polymarket_client_sdk_v2"
+crate-type = ["rlib", "cdylib", "staticlib"]
+
 [features]
 default = []
+c-api = ["clob", "dep:tokio"]
 clob = []
 data = []
 gamma = []
