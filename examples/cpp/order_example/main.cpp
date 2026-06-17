@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
     PMStatus status = pm_client_create(host, private_key, chain_id, &client);
     if (status != PM_STATUS_OK) {
         std::cerr << "pm_client_create failed: " << status_to_string(status) << '\n';
+        print_last_error(client);
         return 1;
     }
 

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use alloy::signers::Signer as _;
 use alloy::signers::local::PrivateKeySigner;
 
-use crate::auth::{state::Authenticated, Kind, Normal};
+use crate::auth::{Kind, Normal, state::Authenticated};
 use crate::c_api::core::error::{required_cstr, write_cstr_buffer};
 use crate::c_api::core::types::{PMClient, PMStatus};
 use crate::clob::{Client, Config};
@@ -176,7 +176,10 @@ pub(crate) fn authenticated_client(
     client: *mut PMClient,
 ) -> Result<Arc<Client<Authenticated<Normal>>>, PMStatus> {
     let inner = inner_from_handle(client)?;
-    inner.clob_client.clone().ok_or(PMStatus::AuthenticationError)
+    inner
+        .clob_client
+        .clone()
+        .ok_or(PMStatus::AuthenticationError)
 }
 
 pub(crate) fn signer(client: *mut PMClient) -> Result<PrivateKeySigner, PMStatus> {
@@ -195,7 +198,11 @@ pub(crate) fn with_runtime<T>(
 #[allow(dead_code)]
 pub(crate) fn client_config(client: *mut PMClient) -> Result<(String, String, u64), PMStatus> {
     let inner = inner_from_handle(client)?;
-    Ok((inner.host.clone(), inner.private_key.clone(), inner.chain_id))
+    Ok((
+        inner.host.clone(),
+        inner.private_key.clone(),
+        inner.chain_id,
+    ))
 }
 
 #[allow(dead_code)]
