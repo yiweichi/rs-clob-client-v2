@@ -136,11 +136,23 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const bool use_market_order = argc >= 3 && std::strcmp(argv[2], "market") == 0;
-    const bool ok = use_market_order
-        ? submit_market_order(client, token_id)
-        : submit_limit_order(client, token_id);
+    // const bool use_market_order = argc >= 3 && std::strcmp(argv[2], "market") == 0;
+    // const bool ok = use_market_order
+    //     ? submit_market_order(client, token_id)
+    //     : submit_limit_order(client, token_id);
+
+    PMCancelResponse response = {};
+    PMStatus cancel_status = pm_cancel_all_orders(client, &response);
+    if (cancel_status != PM_STATUS_OK) {
+        std::cerr << "pm_cancel_all_orders failed: " << status_to_string(cancel_status) << '\n';
+        print_last_error(client);
+        return 1;
+    } else {
+        std::cout << "pm_cancel_all_orders succeeded\n";
+        std::cout << "status: " << response.status << '\n';
+        std::cout << "raw_json: " << response.raw_json << '\n';
+    }
 
     pm_client_destroy(client);
-    return ok ? 0 : 1;
+    return cancel_status == PM_STATUS_OK ? 0 : 1;
 }

@@ -83,6 +83,11 @@ PMStatus pm_cancel_order(
     PMCancelResponse* out
 );
 
+PMStatus pm_cancel_all_orders(
+    PMClient* client,
+    PMCancelResponse* out
+);
+
 #ifdef __cplusplus
 }
 #endif

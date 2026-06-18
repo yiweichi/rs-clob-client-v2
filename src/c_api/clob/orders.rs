@@ -317,3 +317,42 @@ pub unsafe extern "C" fn pm_cancel_order(
 
     result.unwrap_or(PMStatus::Panic)
 }
+
+/// Cancel every open order belonging to the authenticated account.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn pm_cancel_all_orders(
+    client: *mut PMClient,
+    out: *mut PMCancelResponse,
+) -> PMStatus {
+    let result = std::panic::catch_unwind(|| {
+        let status = ensure_client(client);
+        if status != PMStatus::Ok {
+            return status;
+        }
+        if out.is_null() {
+            return PMStatus::NullPointer;
+        }
+
+        let client_ref = match authenticated_client(client) {
+            Ok(value) => value,
+            Err(status) => return status,
+        };
+
+        let response = match with_runtime(client, |runtime| {
+            runtime.block_on(async { client_ref.cancel_all_orders().await })
+        }) {
+            Ok(value) => value,
+            Err(status) => return status,
+        };
+
+        match response {
+            Ok(response) => unsafe { write_cancel_response(out, &response) },
+            Err(error) => {
+                set_last_error(client, error.to_string());
+                status_from_error(&error)
+            }
+        }
+    });
+
+    result.unwrap_or(PMStatus::Panic)
+}

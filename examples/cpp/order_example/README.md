@@ -14,23 +14,25 @@ On Windows this produces files under `target/release`, including an import libra
 
 ## Configure and build this example
 
-From the repository root on Windows PowerShell, prefer linking against the DLL import library and emit the executable into this example directory:
+From the repository root on Windows PowerShell, first create the output directory, then link against the DLL import library and emit the executable into that directory:
 
 ```powershell
-cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /DPM_C_API_DLL /Fe:examples\cpp\order_example\order_example.exe /link target\release\polymarket_client_sdk_v2.dll.lib
+mkdir examples\cpp\order_example\bin
+cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /DPM_C_API_DLL /Fe:examples\cpp\order_example\bin\order_example.exe /link target\release\polymarket_client_sdk_v2.dll.lib
 ```
 
-Copy `target\release\polymarket_client_sdk_v2.dll` next to `examples\cpp\order_example\order_example.exe`, or add `target\release` to `PATH` before running.
+Copy `target\release\polymarket_client_sdk_v2.dll` next to `examples\cpp\order_example\bin\order_example.exe`, or add `target\release` to `PATH` before running.
 
-If you intentionally link the Rust static library instead of the DLL import library, omit `PM_C_API_DLL` and add the native Windows import libraries required by Rust and its dependencies:
+If you intentionally link the Rust static library instead of the DLL import library, omit `PM_C_API_DLL`, create the same output directory first, and add the native Windows import libraries required by Rust and its dependencies:
 
 ```powershell
-cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /Fe:examples\cpp\order_example\order_example.exe /link target\release\polymarket_client_sdk_v2.lib userenv.lib ntdll.lib advapi32.lib bcrypt.lib ws2_32.lib user32.lib shell32.lib ole32.lib crypt32.lib secur32.lib ncrypt.lib
+mkdir examples\cpp\order_example\bin
+cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /Fe:examples\cpp\order_example\bin\order_example.exe /link target\release\polymarket_client_sdk_v2.lib userenv.lib ntdll.lib advapi32.lib bcrypt.lib ws2_32.lib user32.lib shell32.lib ole32.lib crypt32.lib secur32.lib ncrypt.lib
 ```
 
 ## Run
 
-The commands above produce `examples\cpp\order_example\order_example.exe`.
+The commands above produce `examples\cpp\order_example\bin\order_example.exe`.
 
 In PowerShell, set the environment variables first, then run the executable as a separate command:
 
@@ -44,27 +46,29 @@ $env:POLYMARKET_CHAIN_ID = "137"
 Then run:
 
 ```powershell
-.\examples\cpp\order_example\order_example.exe
+.\examples\cpp\order_example\bin\order_example.exe
 ```
 
 If you use Command Prompt instead of PowerShell, use quoted `set` assignments so spaces around `&&` are not included in the environment variable values:
 
 ```cmd
-set "POLYMARKET_PRIVATE_KEY=0xyour_private_key_here" && set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && set "POLYMARKET_CHAIN_ID=137" && examples\cpp\order_example\order_example.exe
+set "POLYMARKET_PRIVATE_KEY=0xyour_private_key_here" && set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && set "POLYMARKET_CHAIN_ID=137" && examples\cpp\order_example\bin\order_example.exe
 ```
 
 By default the example submits a limit buy order with price `0.50` and size `5.00`.
 
+The C API also exposes `pm_cancel_order` for canceling one order id and `pm_cancel_all_orders` for canceling every open order belonging to the authenticated account. Both functions write a `PMCancelResponse` containing a summary status and the raw JSON response.
+
 To submit a market buy order instead from PowerShell:
 
 ```powershell
-.\examples\cpp\order_example\order_example.exe $env:POLYMARKET_TOKEN_ID market
+.\examples\cpp\order_example\bin\order_example.exe $env:POLYMARKET_TOKEN_ID market
 ```
 
 Or from Command Prompt:
 
 ```cmd
-examples\cpp\order_example\order_example.exe %POLYMARKET_TOKEN_ID% market
+examples\cpp\order_example\bin\order_example.exe %POLYMARKET_TOKEN_ID% market
 ```
 
 For market orders, the current C API convention is:
