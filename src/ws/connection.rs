@@ -29,6 +29,10 @@ type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 /// Broadcast channel capacity for incoming messages.
 const BROADCAST_CAPACITY: usize = 1024;
 
+fn install_default_crypto_provider() {
+    _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+}
+
 /// Connection state tracking.
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,6 +119,8 @@ where
     /// The connection loop runs in a background task and automatically
     /// handles reconnection according to the config's `ReconnectConfig`.
     pub fn new(endpoint: String, config: Config, parser: P) -> Result<Self> {
+        install_default_crypto_provider();
+
         let (sender_tx, sender_rx) = mpsc::unbounded_channel();
         let (broadcast_tx, _) = broadcast::channel(BROADCAST_CAPACITY);
         let (state_tx, state_rx) = watch::channel(ConnectionState::Disconnected);

@@ -7,8 +7,11 @@
 extern "C" {
 #endif
 
-/** Opaque client handle created by pm_client_create and destroyed by pm_client_destroy. */
+/** Opaque authenticated trading client handle created by pm_client_create and destroyed by pm_client_destroy. */
 typedef struct PMClient PMClient;
+
+/** Opaque unauthenticated market data client handle created by pm_market_client_create. */
+typedef struct PMMarketClient PMMarketClient;
 
 typedef enum PMStatus {
     PM_STATUS_OK = 0,
@@ -30,6 +33,16 @@ typedef enum PMOrderType {
     PM_ORDER_TYPE_FOK = 2,
     PM_ORDER_TYPE_FAK = 3,
 } PMOrderType;
+
+typedef struct PMMarketResponse {
+    char value[128];
+    char raw_json[4096];
+} PMMarketResponse;
+
+typedef struct PMOrderBookResponse {
+    char hash[128];
+    char raw_json[4096];
+} PMOrderBookResponse;
 
 typedef struct PMOrderResponse {
     char order_id[128];
@@ -58,6 +71,55 @@ PMStatus pm_client_last_error(
 );
 
 PMStatus pm_client_clear_error(PMClient* client);
+
+PMStatus pm_market_client_create(
+    const char* host,
+    PMMarketClient** out_client
+);
+
+void pm_market_client_destroy(PMMarketClient* client);
+
+PMStatus pm_market_client_last_error(
+    PMMarketClient* client,
+    char* out_buffer,
+    size_t out_buffer_len
+);
+
+PMStatus pm_get_server_time(
+    PMMarketClient* client,
+    uint64_t* out_timestamp
+);
+
+PMStatus pm_get_price(
+    PMMarketClient* client,
+    const char* token_id,
+    PMSide side,
+    PMMarketResponse* out
+);
+
+PMStatus pm_get_spread(
+    PMMarketClient* client,
+    const char* token_id,
+    PMMarketResponse* out
+);
+
+PMStatus pm_get_midpoint(
+    PMMarketClient* client,
+    const char* token_id,
+    PMMarketResponse* out
+);
+
+PMStatus pm_get_last_trade_price(
+    PMMarketClient* client,
+    const char* token_id,
+    PMMarketResponse* out
+);
+
+PMStatus pm_get_orderbook(
+    PMMarketClient* client,
+    const char* token_id,
+    PMOrderBookResponse* out
+);
 
 PMStatus pm_market_order(
     PMClient* client,

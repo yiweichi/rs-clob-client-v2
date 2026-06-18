@@ -12,6 +12,12 @@ pub struct PMClient {
     _private: [u8; 0],
 }
 
+/// Opaque unauthenticated market data client handle used by C/C++ callers.
+#[repr(C)]
+pub struct PMMarketClient {
+    _private: [u8; 0],
+}
+
 /// Common status codes returned by C API functions.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -23,6 +29,40 @@ pub enum PMStatus {
     NetworkError = 4,
     InternalError = 100,
     Panic = 101,
+}
+
+/// Response for simple market data endpoints that return a single numeric value.
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct PMMarketResponse {
+    pub value: [c_char; 128],
+    pub raw_json: [c_char; 4096],
+}
+
+impl Default for PMMarketResponse {
+    fn default() -> Self {
+        Self {
+            value: [0; 128],
+            raw_json: [0; 4096],
+        }
+    }
+}
+
+/// Response for orderbook summary queries.
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct PMOrderBookResponse {
+    pub hash: [c_char; 128],
+    pub raw_json: [c_char; 4096],
+}
+
+impl Default for PMOrderBookResponse {
+    fn default() -> Self {
+        Self {
+            hash: [0; 128],
+            raw_json: [0; 4096],
+        }
+    }
 }
 
 /// Order side exposed to C/C++ callers.

@@ -34,7 +34,46 @@ cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /
 
 The commands above produce `examples\cpp\order_example\bin\order_example.exe`.
 
-In PowerShell, set the environment variables first, then run the executable as a separate command:
+The executable has separate modes so safe market data checks are isolated from authenticated order actions:
+
+- `market-data`: run unauthenticated market data C API smoke tests. This is the default.
+- `limit-order`: submit a limit buy order with price `0.50` and size `5.00`.
+- `market-order`: submit a market buy order with amount `1.00` USDC.
+- `cancel-all`: cancel every open order belonging to the authenticated account.
+
+### Market data smoke test
+
+This mode does not require a private key. Set a token id to also run token-specific checks; without a token id, it only calls `pm_get_server_time`.
+
+PowerShell:
+
+```powershell
+$env:POLYMARKET_TOKEN_ID = "your_uint256_token_id_here"
+$env:POLYMARKET_CLOB_HOST = "https://clob.polymarket.com/"
+.\examples\cpp\order_example\bin\order_example.exe market-data
+```
+
+Command Prompt:
+
+```cmd
+set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && examples\cpp\order_example\bin\order_example.exe market-data
+```
+
+The market data mode exercises these unauthenticated C API functions:
+
+- `pm_market_client_create` / `pm_market_client_destroy`
+- `pm_get_server_time`
+- `pm_get_price`
+- `pm_get_spread`
+- `pm_get_midpoint`
+- `pm_get_last_trade_price`
+- `pm_get_orderbook`
+
+Use `PMMarketResponse` for single-value endpoints and `PMOrderBookResponse` for orderbook summaries.
+
+### Authenticated order actions
+
+Set the private key, token id, host, and chain id before running an authenticated mode:
 
 ```powershell
 $env:POLYMARKET_PRIVATE_KEY = "0xyour_private_key_here"
@@ -43,32 +82,28 @@ $env:POLYMARKET_CLOB_HOST = "https://clob.polymarket.com/"
 $env:POLYMARKET_CHAIN_ID = "137"
 ```
 
-Then run:
+Submit a limit buy order:
 
 ```powershell
-.\examples\cpp\order_example\bin\order_example.exe
+.\examples\cpp\order_example\bin\order_example.exe limit-order
+```
+
+Submit a market buy order:
+
+```powershell
+.\examples\cpp\order_example\bin\order_example.exe market-order
+```
+
+Cancel all open orders:
+
+```powershell
+.\examples\cpp\order_example\bin\order_example.exe cancel-all
 ```
 
 If you use Command Prompt instead of PowerShell, use quoted `set` assignments so spaces around `&&` are not included in the environment variable values:
 
 ```cmd
-set "POLYMARKET_PRIVATE_KEY=0xyour_private_key_here" && set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && set "POLYMARKET_CHAIN_ID=137" && examples\cpp\order_example\bin\order_example.exe
-```
-
-By default the example submits a limit buy order with price `0.50` and size `5.00`.
-
-The C API also exposes `pm_cancel_order` for canceling one order id and `pm_cancel_all_orders` for canceling every open order belonging to the authenticated account. Both functions write a `PMCancelResponse` containing a summary status and the raw JSON response.
-
-To submit a market buy order instead from PowerShell:
-
-```powershell
-.\examples\cpp\order_example\bin\order_example.exe $env:POLYMARKET_TOKEN_ID market
-```
-
-Or from Command Prompt:
-
-```cmd
-examples\cpp\order_example\bin\order_example.exe %POLYMARKET_TOKEN_ID% market
+set "POLYMARKET_PRIVATE_KEY=0xyour_private_key_here" && set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && set "POLYMARKET_CHAIN_ID=137" && examples\cpp\order_example\bin\order_example.exe limit-order
 ```
 
 For market orders, the current C API convention is:
