@@ -1,4 +1,4 @@
-#include "polymarket_c_api.h"
+#include "PolymarketCApi.h"
 
 #include <cstdlib>
 #include <cstring>

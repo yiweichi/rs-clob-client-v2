@@ -1,38 +1,51 @@
 # C++ C API order example
 
-This example shows how to submit Polymarket CLOB orders from C++ through the Rust C API.
+This example shows how to submit Polymarket CLOB orders from C++ through the Rust C API on Linux.
 
-## Build the Rust C API library
+## Build the Rust C API library with SONAME
+
+From the repository root, build the Rust C API shared library and explicitly set its SONAME so downstream ELF binaries record a stable dependency name instead of an absolute path:
+
+```bash
+RUSTFLAGS="-C link-arg=-Wl,-soname,libpolymarket_client_sdk_v2.so" cargo build --release --features c-api
+```
+
+## Configure and build this example on Linux
 
 From the repository root:
 
-```powershell
-cargo build --release --features c-api
+```bash
+mkdir -p examples/cpp/order_example/bin
+c++ -std=c++17 examples/cpp/order_example/main.cpp \
+  -I examples/cpp/order_example \
+  -L target/release \
+  -lpolymarket_client_sdk_v2 \
+  -Wl,-rpath,'$ORIGIN' \
+  -Wl,-rpath,'$ORIGIN/../../../target/release' \
+  -o examples/cpp/order_example/bin/order_example
 ```
 
-On Windows this produces files under `target/release`, including an import library and DLL for `polymarket_client_sdk_v2`.
+If you want the executable to load the Rust shared library from the same directory first, copy the shared library next to the executable:
 
-## Configure and build this example
-
-From the repository root on Windows PowerShell, first create the output directory, then link against the DLL import library and emit the executable into that directory:
-
-```powershell
-mkdir examples\cpp\order_example\bin
-cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /DPM_C_API_DLL /Fe:examples\cpp\order_example\bin\order_example.exe /link target\release\polymarket_client_sdk_v2.dll.lib
+```bash
+cp target/release/libpolymarket_client_sdk_v2.so examples/cpp/order_example/bin/
 ```
 
-Copy `target\release\polymarket_client_sdk_v2.dll` next to `examples\cpp\order_example\bin\order_example.exe`, or add `target\release` to `PATH` before running.
+Then confirm the executable records the dependency by library name instead of an absolute path:
 
-If you intentionally link the Rust static library instead of the DLL import library, omit `PM_C_API_DLL`, create the same output directory first, and add the native Windows import libraries required by Rust and its dependencies:
+```bash
+readelf -d examples/cpp/order_example/bin/order_example | grep NEEDED
+```
 
-```powershell
-mkdir examples\cpp\order_example\bin
-cl /EHsc /MD examples\cpp\order_example\main.cpp /I examples\cpp\order_example /Fe:examples\cpp\order_example\bin\order_example.exe /link target\release\polymarket_client_sdk_v2.lib userenv.lib ntdll.lib advapi32.lib bcrypt.lib ws2_32.lib user32.lib shell32.lib ole32.lib crypt32.lib secur32.lib ncrypt.lib
+The expected output should contain:
+
+```text
+Shared library: [libpolymarket_client_sdk_v2.so]
 ```
 
 ## Run
 
-The commands above produce `examples\cpp\order_example\bin\order_example.exe`.
+The commands above produce `examples/cpp/order_example/bin/order_example`.
 
 The executable has separate modes so safe market data checks are isolated from authenticated order actions:
 
@@ -45,18 +58,10 @@ The executable has separate modes so safe market data checks are isolated from a
 
 This mode does not require a private key. Set a token id to also run token-specific checks; without a token id, it only calls `pm_get_server_time`.
 
-PowerShell:
-
-```powershell
-$env:POLYMARKET_TOKEN_ID = "your_uint256_token_id_here"
-$env:POLYMARKET_CLOB_HOST = "https://clob.polymarket.com/"
-.\examples\cpp\order_example\bin\order_example.exe market-data
-```
-
-Command Prompt:
-
-```cmd
-set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && examples\cpp\order_example\bin\order_example.exe market-data
+```bash
+export POLYMARKET_TOKEN_ID="your_uint256_token_id_here"
+export POLYMARKET_CLOB_HOST="https://clob.polymarket.com/"
+./examples/cpp/order_example/bin/order_example market-data
 ```
 
 The market data mode exercises these unauthenticated C API functions:
@@ -75,35 +80,29 @@ Use `PMMarketResponse` for single-value endpoints and `PMOrderBookResponse` for 
 
 Set the private key, token id, host, and chain id before running an authenticated mode:
 
-```powershell
-$env:POLYMARKET_PRIVATE_KEY = "0xyour_private_key_here"
-$env:POLYMARKET_TOKEN_ID = "your_uint256_token_id_here"
-$env:POLYMARKET_CLOB_HOST = "https://clob.polymarket.com/"
-$env:POLYMARKET_CHAIN_ID = "137"
+```bash
+export POLYMARKET_PRIVATE_KEY="0xyour_private_key_here"
+export POLYMARKET_TOKEN_ID="your_uint256_token_id_here"
+export POLYMARKET_CLOB_HOST="https://clob.polymarket.com/"
+export POLYMARKET_CHAIN_ID="137"
 ```
 
 Submit a limit buy order:
 
-```powershell
-.\examples\cpp\order_example\bin\order_example.exe limit-order
+```bash
+./examples/cpp/order_example/bin/order_example limit-order
 ```
 
 Submit a market buy order:
 
-```powershell
-.\examples\cpp\order_example\bin\order_example.exe market-order
+```bash
+./examples/cpp/order_example/bin/order_example market-order
 ```
 
 Cancel all open orders:
 
-```powershell
-.\examples\cpp\order_example\bin\order_example.exe cancel-all
-```
-
-If you use Command Prompt instead of PowerShell, use quoted `set` assignments so spaces around `&&` are not included in the environment variable values:
-
-```cmd
-set "POLYMARKET_PRIVATE_KEY=0xyour_private_key_here" && set "POLYMARKET_TOKEN_ID=your_uint256_token_id_here" && set "POLYMARKET_CLOB_HOST=https://clob.polymarket.com/" && set "POLYMARKET_CHAIN_ID=137" && examples\cpp\order_example\bin\order_example.exe limit-order
+```bash
+./examples/cpp/order_example/bin/order_example cancel-all
 ```
 
 For market orders, the current C API convention is:
