@@ -45,8 +45,8 @@ fn set_error(inner: &mut PMClientInner, message: impl Into<String>) {
 pub unsafe extern "C" fn pm_client_create(
     host: *const c_char,
     private_key: *const c_char,
-    chain_id: u64,
     funder: *const c_char,
+    chain_id: u64,
     out_client: *mut *mut PMClient,
 ) -> PMStatus {
     let result = std::panic::catch_unwind(|| {
