@@ -262,10 +262,16 @@ bool run_authenticated_action(
     const char* host,
     const char* private_key,
     uint64_t chain_id,
+    const char* funder,
     const char* token_id
 ) {
     if (private_key == nullptr || std::strlen(private_key) == 0) {
         std::cerr << "Missing POLYMARKET_PRIVATE_KEY environment variable\n";
+        return false;
+    }
+
+    if (funder == nullptr || std::strlen(funder) == 0) {
+        std::cerr << "Missing POLYMARKET_FUNDER environment variable\n";
         return false;
     }
 
@@ -276,7 +282,7 @@ bool run_authenticated_action(
     }
 
     PMClient* client = nullptr;
-    PMStatus status = pm_client_create(host, private_key, chain_id, &client);
+    PMStatus status = pm_client_create(host, private_key, chain_id, funder, &client);
     if (status != PM_STATUS_OK) {
         std::cerr << "pm_client_create failed: " << status_to_string(status) << '\n';
         print_last_error(client);
@@ -323,6 +329,7 @@ int main(int argc, char** argv) {
             host,
             std::getenv("POLYMARKET_PRIVATE_KEY"),
             chain_id,
+            std::getenv("POLYMARKET_FUNDER"),
             token_id
         ) ? 0 : 1;
     }

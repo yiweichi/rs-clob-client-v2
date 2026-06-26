@@ -5,12 +5,14 @@ use std::ptr;
 use std::str::FromStr as _;
 use std::sync::Arc;
 
+use alloy::primitives::Address;
 use alloy::signers::Signer as _;
 use alloy::signers::local::PrivateKeySigner;
 
 use crate::auth::{Kind, Normal, state::Authenticated};
 use crate::c_api::core::error::{required_cstr, write_cstr_buffer};
 use crate::c_api::core::types::{PMClient, PMStatus};
+use crate::clob::types::SignatureType;
 use crate::clob::{Client, Config};
 
 pub(crate) struct PMClientInner<K: Kind = Normal> {
@@ -44,6 +46,7 @@ pub unsafe extern "C" fn pm_client_create(
     host: *const c_char,
     private_key: *const c_char,
     chain_id: u64,
+    funder: *const c_char,
     out_client: *mut *mut PMClient,
 ) -> PMStatus {
     let result = std::panic::catch_unwind(|| {
@@ -56,6 +59,12 @@ pub unsafe extern "C" fn pm_client_create(
             Err(status) => return status,
         };
         let private_key = match unsafe { required_cstr(private_key) } {
+            Ok(value) => value,
+            Err(status) => return status,
+        };
+        let funder = match unsafe { required_cstr(funder) }
+            .and_then(|value| Address::from_str(value).map_err(|_| PMStatus::InvalidArgument))
+        {
             Ok(value) => value,
             Err(status) => return status,
         };
@@ -84,6 +93,8 @@ pub unsafe extern "C" fn pm_client_create(
                     .map_err(|_| PMStatus::InternalError)?;
                 unauthenticated
                     .authentication_builder(&signer)
+                    .funder(funder)
+                    .signature_type(SignatureType::Poly1271)
                     .authenticate()
                     .await
                     .map_err(|_| PMStatus::AuthenticationError)

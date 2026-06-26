@@ -59,6 +59,7 @@ PMStatus pm_client_create(
     const char* host,
     const char* private_key,
     uint64_t chain_id,
+    const char* funder,
     PMClient** out_client
 );
 
